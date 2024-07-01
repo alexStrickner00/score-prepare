@@ -93,17 +93,56 @@ if __name__ == "__main__":
         rotation_angle_lines = [
             h for h in horizontal_lines if h.length > length_threshold
         ]
-        angles = [h.angle for h in rotation_angle_lines]
-        weights = [h.length for h in rotation_angle_lines]
 
-        avg_angle = np.average(angles, weights=weights)
+        rotation_angle_lines.sort(key=lambda x: x.y1)
+
+        std_dev_y = np.std(
+            [line.y1 for line in rotation_angle_lines]
+            + [line.y2 for line in rotation_angle_lines]
+        )
 
         most_left = int(min([line.x1 for line in rotation_angle_lines]))
         most_right = int(max([line.x2 for line in rotation_angle_lines]))
         most_top = int(min([line.y1 for line in rotation_angle_lines]))
         most_bottom = int(max([line.y2 for line in rotation_angle_lines]))
 
+        quantile_upper = np.quantile(
+            [line.y1 for line in rotation_angle_lines]
+            + [line.y2 for line in rotation_angle_lines],
+            0.9,
+        )
+
+        quantile_lower = np.quantile(
+            [line.y1 for line in rotation_angle_lines]
+            + [line.y2 for line in rotation_angle_lines],
+            0.1,
+        )
+
+        upper_bound = quantile_upper + std_dev_y
+
+        lower_bound = quantile_lower - std_dev_y
+
+        # rotation_angle_lines = [
+        #     line
+        #     for line in rotation_angle_lines
+        #     if lower_bound < line.y1 < upper_bound
+        #     and lower_bound < line.y2 < upper_bound
+        # ]
+
+        angles = [h.angle for h in rotation_angle_lines]
+        weights = [h.length for h in rotation_angle_lines]
+
+        avg_angle = np.average(angles, weights=weights)
+
         if args.debug:
+            print("page", i)
+            print("avg angle:", avg_angle)
+            print("quantile_upper:", quantile_upper)
+            print("quantile_lower:", quantile_lower)
+            print("std_dev_y:", std_dev_y)
+            print("upper_bound:", upper_bound)
+            print("lower_bound:", lower_bound)
+
             # debug img
             debug_img = np.copy(img)
             for line in rotation_angle_lines:
@@ -136,6 +175,12 @@ if __name__ == "__main__":
             cv2.imshow("debug", debug_img)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+
+            # plot histogram of lines over y axis
+            plt.hist([line.y1 for line in rotation_angle_lines], bins=50)
+            plt.savefig("hist.png")
+
+            Image.open("hist.png").show()
 
         # print("median angle:", avg_angle)
         # rotate image
