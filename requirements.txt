@@ -1,0 +1,12 @@
+# import cv2
+# from pdf2image import convert_from_path
+# import numpy as np
+# from PIL import Image
+
+# import matplotlib.pyplot as plt
+opencv-python==4.10.0.84
+numpy==2.0.0
+pdf2image==1.17.0
+Pillow==9.0.1
+matplotlib==3.9.0
+tqdm==4.66.4
